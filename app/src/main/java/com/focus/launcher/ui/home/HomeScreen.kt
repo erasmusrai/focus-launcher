@@ -188,6 +188,11 @@ fun HomeScreen(
     var noteMenu by remember { mutableStateOf(false) }
     var editingNoteLink by remember { mutableStateOf(false) }
     val noteApp = remember(settings.noteApp, apps) { apps.firstOrNull { it.key == settings.noteApp } }
+    // A tap on the calendar section (or on the clock, when it is set to "Calendar"): the app the owner
+    // chose, else the phone's calendar. A chosen app that was uninstalled falls back to the default.
+    val openCalendar: () -> Unit = {
+        apps.firstOrNull { it.key == settings.calendarApp }?.let(onLaunch) ?: openCalendarApp(context)
+    }
     var choosingSplitSide by remember { mutableStateOf(false) }
 
     // Split clock: the section in its right half is not shown a second time further down. The
@@ -316,7 +321,7 @@ fun HomeScreen(
             // The split clock is a header: it sits near the top. The ring floats lower, as a centrepiece.
             Spacer(Modifier.weight(if (split) 0.35f else 0.9f))
 
-            val clockTap: () -> Unit = { performClockTap(context, settings.clockTap, apps, onLaunch) { onOpenReview(null) } }
+            val clockTap: () -> Unit = { performClockTap(context, settings.clockTap, apps, onLaunch, openCalendar) { onOpenReview(null) } }
             val openScreenTime: () -> Unit = {
                 Graph.state.did(Tip.SCREEN_TIME)
                 if (usageAccess) onOpenReview(null) else Perms.openUsageAccess(context)
@@ -336,7 +341,7 @@ fun HomeScreen(
                             events = events,
                             hasAccess = calendarAccess,
                             use24h = use24h,
-                            onClick = { openCalendarApp(context) },
+                            onClick = openCalendar,
                             onLongPress = { choosingSplitSide = true },
                             onRequestAccess = { askCalendar.launch(Manifest.permission.READ_CALENDAR) },
                         )
@@ -399,7 +404,7 @@ fun HomeScreen(
                     events = events,
                     hasAccess = calendarAccess,
                     use24h = use24h,
-                    onClick = { openCalendarApp(context) },
+                    onClick = openCalendar,
                     onRequestAccess = { askCalendar.launch(Manifest.permission.READ_CALENDAR) },
                     maxEvents = fit.maxEvents,
                     calendarName = shownCalendar?.shortName,
@@ -734,13 +739,14 @@ private fun performClockTap(
     spec: String,
     apps: List<AppEntry>,
     onLaunch: (AppEntry) -> Unit,
+    openCalendar: () -> Unit,
     onOpenScreenTime: () -> Unit,
 ) {
     when (spec) {
         TAP_ALARMS -> if (!Perms.start(context, Intent(AlarmClock.ACTION_SHOW_ALARMS), options = launchOptions(context))) {
             Toast.makeText(context, "Could not open alarms", Toast.LENGTH_SHORT).show()
         }
-        TAP_CALENDAR -> openCalendarApp(context)
+        TAP_CALENDAR -> openCalendar()
         TAP_SCREEN_TIME -> onOpenScreenTime()
         TAP_BATTERY -> Perms.start(
             context,

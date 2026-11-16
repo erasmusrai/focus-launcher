@@ -65,6 +65,8 @@ data class Settings(
     val showCalendar: Boolean = false,
     /** [CalendarInfo.key] of the single calendar shown on the home screen, or [CALENDAR_AUTO] / [CALENDAR_ALL]. */
     val calendarKey: String = CALENDAR_AUTO,
+    /** [AppEntry.key] of the app a tap on the calendar section opens. Empty: the phone's own calendar app. */
+    val calendarApp: String = "",
     /** The Mon-Sun strip with today marked. Off: the ring already carries the date. */
     val showWeekStrip: Boolean = false,
     /** Previous, play or pause, next, and what is playing, as a section of the home screen. */
@@ -148,6 +150,7 @@ data class Settings(
         put("showDate", showDate)
         put("showCalendar", showCalendar)
         put("calendarKey", calendarKey)
+        put("calendarApp", calendarApp)
         put("showWeekStrip", showWeekStrip)
         put("showMusic", showMusic)
         put("musicAutoHide", musicAutoHide)
@@ -226,6 +229,7 @@ data class Settings(
                         else -> "p:$legacy"
                     }
                 },
+                calendarApp = o.optString("calendarApp", d.calendarApp),
                 showWeekStrip = o.optBoolean("showWeekStrip", d.showWeekStrip),
                 showMusic = o.optBoolean("showMusic", d.showMusic),
                 musicAutoHide = o.optBoolean("musicAutoHide", d.musicAutoHide),

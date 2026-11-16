@@ -55,7 +55,7 @@ private fun update(transform: (Settings) -> Settings) = Graph.settings.update(tr
 
 // ---- Home screen -----------------------------------------------------------------------------
 
-private enum class HomeDialog { NONE, CLOCK, SPLIT_SIDE, RING, TAP, TIME_FORMAT, ALIGN, LEFT, RIGHT, CALENDAR, MUSIC_APP, NOTE_APP }
+private enum class HomeDialog { NONE, CLOCK, SPLIT_SIDE, RING, TAP, TIME_FORMAT, ALIGN, LEFT, RIGHT, CALENDAR, CALENDAR_APP, MUSIC_APP, NOTE_APP }
 
 @Composable
 internal fun HomePage(settings: Settings, apps: List<AppEntry>, onBack: () -> Unit, go: (String) -> Unit) {
@@ -129,6 +129,13 @@ internal fun HomePage(settings: Settings, apps: List<AppEntry>, onBack: () -> Un
             enabled = settings.showCalendar && calendars.isNotEmpty(),
             onClick = { dialog = HomeDialog.CALENDAR },
         )
+        SettingRow(
+            "Calendar opens",
+            subtitle = "The app a tap on the calendar section opens. Also used when the clock tap is set to Calendar.",
+            value = apps.firstOrNull { it.key == settings.calendarApp }?.label ?: "Phone's calendar",
+            enabled = settings.showCalendar,
+            onClick = { dialog = HomeDialog.CALENDAR_APP },
+        )
         if (settings.showCalendar && workBlocked) {
             Note(
                 "Calendars inside your Work profile are not listed: the organisation that manages it does not let other " +
@@ -198,6 +205,13 @@ internal fun HomePage(settings: Settings, apps: List<AppEntry>, onBack: () -> Un
             workProfileBlocked = workBlocked,
             onDismiss = close,
             onPick = { key -> update { it.copy(calendarKey = key) } },
+        )
+        HomeDialog.CALENDAR_APP -> AppPickerDialog(
+            title = "Calendar opens",
+            apps = apps.filter { it.key !in settings.hidden },
+            onDismiss = close,
+            leading = listOf("Phone's calendar" to { update { it.copy(calendarApp = "") } }),
+            onPick = { app -> update { it.copy(calendarApp = app.key) } },
         )
         HomeDialog.TIME_FORMAT -> ChoiceDialog("Time format", TimeFormat.entries.map { it to it.label }, settings.timeFormat, close) { v -> update { it.copy(timeFormat = v) } }
         HomeDialog.ALIGN -> ChoiceDialog("Alignment", HomeAlign.entries.map { it to it.label }, settings.homeAlign, close) { v -> update { it.copy(homeAlign = v) } }
